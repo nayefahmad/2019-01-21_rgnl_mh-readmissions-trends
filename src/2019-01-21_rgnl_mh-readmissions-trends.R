@@ -13,6 +13,7 @@ library(here)
 library(janitor)
 library(fpp)
 library(broom)
+library(magrittr)
 
 
 # read in data: -----------
@@ -55,17 +56,15 @@ p1.trends <-
 
 
 # analysis for RHS: ------------
-ts1.rhs <- df1.readmit.rates %>% 
+df2.rhs <- df1.readmit.rates %>% 
       filter(entity == "Richmond") %>% 
-      filter(!period %in% c("FY2017-Q2", 
-                            "FY2017-Q3",
-                            "FY2017-Q4",
-                            "FY2018-Q1",
-                            "FY2018-Q2",
+      filter(!period %in% c("FY2018-Q2",
                             "FY2018-Q3",
                             "FY2018-Q4",
                             "FY2017-Q2",
-                            "FY2019-Q1")) %>% 
+                            "FY2019-Q1"))  
+      
+ts1.rhs <- df2.rhs %>% 
       pull(readmission_rate) %>% 
       ts(frequency = 4)
 
@@ -74,10 +73,31 @@ ts1.rhs <- df1.readmit.rates %>%
 m1.rhs <- tslm(ts1.rhs ~ season)
 
 summary(m1.rhs)
-resid(m1.rhs) %>% density() %>% plot  # looks decent 
+resid(m1.rhs) %>% density() %>% plot  # looks a little weird but might be ok
 
-df2.rhs.fitted <- augment(m1.rhs)
 
+
+# bind old data and forecast together: 
+df2.rhs %<>% 
+      bind_cols(augment(m1.rhs)) %>% 
+      select(entity, 
+             period, 
+             readmission_rate, 
+             .fitted) %>% 
+      
+      # add column with indicator for forecast
+      mutate(forecast = rep(0, n())) %>% 
+      
+      # add in rows for forecasted data points in FY 2018 Q2 TO Q4: 
+      bind_rows(data.frame(entity = rep("Richmond", 3), 
+                           period = c("FY2018-Q2", 
+                                      "FY2018-Q3", 
+                                      "FY2018-Q4"), 
+                           readmission_rate = rep(NA, 3), 
+                           .fitted = forecast(m1.rhs, h = 3)$mean %>% as.numeric, 
+                           forecast = rep(1, 3)))
+
+df2.rhs
 
 
 
