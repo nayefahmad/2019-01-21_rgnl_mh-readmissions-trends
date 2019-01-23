@@ -57,23 +57,19 @@ p1.trends <-
 
 # analysis for RHS: ------------
 df2.rhs <- df1.readmit.rates %>% 
-      filter(entity == "Richmond") %>% 
-      filter(!period %in% c("FY2018-Q2",
-                            "FY2018-Q3",
-                            "FY2018-Q4",
-                            "FY2017-Q2",
-                            "FY2019-Q1"))  
+      filter(entity == "Richmond")  
       
 ts1.rhs <- df2.rhs %>% 
+      slice(1:21) %>%  # drop quarters after FY18 Q1
       pull(readmission_rate) %>% 
       ts(frequency = 4)
 
 # ts1.rhs
 
-m1.rhs <- tslm(ts1.rhs ~ season)
+m1.rhs <- tslm(ts1.rhs ~ trend + season)
 
 summary(m1.rhs)
-resid(m1.rhs) %>% density() %>% plot  # looks a little weird but might be ok
+resid(m1.rhs) %>% density() %>% plot  # looks a kinda weird but might be ok
 
 
 
@@ -82,8 +78,7 @@ df2.rhs %<>%
       bind_cols(augment(m1.rhs)) %>% 
       select(entity, 
              period, 
-             readmission_rate, 
-             .fitted) %>% 
+             readmission_rate) %>% 
       
       # add column with indicator for forecast
       mutate(forecast = rep(0, n())) %>% 
