@@ -11,6 +11,8 @@
 library(tidyverse)
 library(here)
 library(janitor)
+library(fpp)
+library(broom)
 
 
 # read in data: -----------
@@ -52,8 +54,30 @@ p1.trends <-
 
 
 
-# todo: split into training and test tests. fit model on training, forecast
-# forward. See what the discrepancy is.
+# analysis for RHS: ------------
+ts1.rhs <- df1.readmit.rates %>% 
+      filter(entity == "Richmond") %>% 
+      filter(!period %in% c("FY2017-Q2", 
+                            "FY2017-Q3",
+                            "FY2017-Q4",
+                            "FY2018-Q1",
+                            "FY2018-Q2",
+                            "FY2018-Q3",
+                            "FY2018-Q4",
+                            "FY2017-Q2",
+                            "FY2019-Q1")) %>% 
+      pull(readmission_rate) %>% 
+      ts(frequency = 4)
+
+# ts1.rhs
+
+m1.rhs <- tslm(ts1.rhs ~ season)
+
+summary(m1.rhs)
+resid(m1.rhs) %>% density() %>% plot  # looks decent 
+
+df2.rhs.fitted <- augment(m1.rhs)
+
 
 
 
