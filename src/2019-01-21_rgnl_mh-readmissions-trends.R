@@ -16,7 +16,7 @@ library(broom)
 library(magrittr)
 
 
-# read in data: -----------
+# 1) read in data: -----------
 df1.readmit.rates <- read_csv(here("data",
                                    "2019-01-21_rgnl_readmisison-rates.csv")) %>% 
       mutate_if(is.character, 
@@ -32,7 +32,7 @@ summary(df1.readmit.rates)
 
 
 
-# plot trends: ----------
+# 2) plot trends: ----------
 p1.trends <- 
       df1.readmit.rates %>% 
       ggplot(aes(x = period, 
@@ -54,8 +54,9 @@ p1.trends <-
 
 
 
-
-# analysis for RHS: ------------
+#************************************************************************
+# 3) analysis for RHS: ------------
+#************************************************************************
 df2.rhs <- df1.readmit.rates %>% 
       filter(entity == "Richmond")  
       
@@ -97,6 +98,149 @@ df2.1.rhs.fcast <- df2.rhs %>%
       bind_cols(rhs.high)
 
 df2.1.rhs.fcast %>% View()
+
+
+
+#************************************************************************
+# 4) analysis for Vancouver: ------------
+#************************************************************************
+df3.van <- df1.readmit.rates %>% 
+      filter(entity == "Vancouver")  
+
+ts2.van <- df3.van %>% 
+      slice(1:21) %>%  # drop quarters after FY18 Q1
+      pull(readmission_rate) %>% 
+      ts(frequency = 4)
+
+# ts1.rhs
+
+m2.van <- tslm(ts2.van ~ season)
+
+summary(m2.van)
+resid(m2.van) %>% density() %>% plot  # looks a kinda weird but might be ok
+
+
+
+# bind old data and forecast together: -------
+# df with lower forecast interval: 
+van.low <- forecast(m2.van, 
+                    h = 4) %>% 
+      as.data.frame() %>% 
+      pull('Lo 95')
+van.low <- data.frame(low = c(rep(NA, 21), 
+                              van.low))
+
+# df with higher forecast interval: 
+van.high <- forecast(m2.van, 
+                     h = 4) %>% 
+      as.data.frame() %>% 
+      pull('Hi 95')
+van.high <- data.frame(high = c(rep(NA, 21), 
+                                van.high))
+
+df3.1.van.fcast <- df3.van %>%
+      bind_cols(van.low) %>% 
+      set_names(c(names(df3.van), 
+                  "low")) %>% 
+      bind_cols(van.high)
+
+df3.1.van.fcast %>% View()
+
+
+
+
+
+
+
+#************************************************************************
+# 5) analysis for PHC: ------------
+#************************************************************************
+df4.phc <- df1.readmit.rates %>% 
+      filter(entity == "PHC")  
+
+ts3.phc <- df4.phc %>% 
+      slice(1:21) %>%  # drop quarters after FY18 Q1
+      pull(readmission_rate) %>% 
+      ts(frequency = 4)
+
+# ts1.rhs
+
+m3.phc <- tslm(ts3.phc ~ season)
+
+summary(m3.phc)
+resid(m3.phc) %>% density() %>% plot  # looks a kinda weird but might be ok
+
+
+
+# bind old data and forecast together: -------
+# df with lower forecast interval: 
+phc.low <- forecast(m3.phc, 
+                    h = 4) %>% 
+      as.data.frame() %>% 
+      pull('Lo 95')
+phc.low <- data.frame(low = c(rep(NA, 21), 
+                              phc.low))
+
+# df with higher forecast interval: 
+phc.high <- forecast(m3.phc, 
+                     h = 4) %>% 
+      as.data.frame() %>% 
+      pull('Hi 95')
+phc.high <- data.frame(high = c(rep(NA, 21), 
+                                phc.high))
+
+df4.1.phc.fcast <- df4.phc %>%
+      bind_cols(phc.low) %>% 
+      set_names(c(names(df4.phc), 
+                  "low")) %>% 
+      bind_cols(phc.high)
+
+df4.1.phc.fcast %>% View()
+
+
+
+
+#**************************************************************************
+# 6) Bind all datasets together
+#**************************************************************************
+df5.all.areas <- rbind(df2.1.rhs.fcast, 
+                       df3.1.van.fcast, 
+                       df4.1.phc.fcast)
+
+
+
+
+#**************************************************************************
+# 7) Plot with forecast intervals  
+#**************************************************************************
+p2.fcast.intervals <- 
+      
+      df5.all.areas %>% 
+      
+      ggplot(aes(x = period, 
+                 y = readmission_rate, 
+                 group = entity)) + 
+      
+      geom_ribbon(aes(x = period, 
+                      ymin = low, 
+                      ymax = high), 
+                  fill = "grey70") + 
+      
+      geom_line(aes(col = entity), 
+                size = 1) + 
+                      
+      
+      facet_wrap(~entity, 
+                 nrow = 3) + 
+      
+      scale_x_discrete(breaks = df1.readmit.rates$period[seq(1, 25, 4)]) + 
+      
+      theme_minimal() + 
+      theme(axis.text.x = element_text(angle = 45, 
+                                       hjust = 1), 
+            panel.border = element_rect(colour = "grey80", 
+                                        fill = NA));p2.fcast.intervals
+
 
 
 
