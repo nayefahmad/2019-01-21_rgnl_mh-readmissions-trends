@@ -229,7 +229,7 @@ p2.fcast.intervals <-
       geom_ribbon(aes(x = period, 
                       ymin = low, 
                       ymax = high), 
-                  fill = "grey90") + 
+                  fill = "lightblue") + 
       
       geom_line(aes(col = entity), 
                 size = 1) + 
@@ -242,22 +242,31 @@ p2.fcast.intervals <-
       scale_x_discrete(breaks = df1.readmit.rates$period[seq(1, 25, 4)]) + 
       
       labs(title = "Time series analysis of readmission rates, by CoC", 
-           subtitle = "Grey areas indicate forecast intervals for last 3 quarters, based on all previous data. \nPoints outside the forecast intervals indicate values that cannot be explained by chance variation alone. \n\nRichmond : FY19 Q1 is outside the forecast interval \nVancouver: FY18 Q2 is outside the forecast interval \n", 
-           caption = "Data source: VCH Balanced Scorecard") + 
+           subtitle = "Blue areas indicate forecast intervals for last 4 quarters, based on all previous data. Points outside the forecast \nintervals indicate values that cannot be explained by chance variation alone. \n\nRichmond : FY19 Q1 is outside the forecast interval \nVancouver: FY18 Q2 and Q3 is outside the forecast interval \n", 
+           caption = "Data source: VCH Balanced Scorecard", 
+           x = "Fiscal period", 
+           y = "MH Readmission rate") + 
       
       # highlight RHS point: 
       geom_point(data = df5.all.areas %>% filter(entity == "Richmond"), 
                aes(x = "FY2019-Q1", 
                    y = 0.04), 
                col = "red", 
-               size = 2) +
+               size = 3) +
       
-      # highlight: Vancouver point: 
+      # highlight: Vancouver points: 
       geom_point(data = df5.all.areas %>% filter(entity == "Vancouver"), 
                  aes(x = "FY2018-Q2", 
-                     y = 0.04), 
+                     y = 0.19), 
                  col = "red", 
-                 size = 2) +
+                 size = 3) +
+      geom_point(data = df5.all.areas %>% filter(entity == "Vancouver"), 
+                 aes(x = "FY2018-Q3", 
+                     y = 0.18), 
+                 col = "red", 
+                 size = 3) +
+      
+      
       
       theme_minimal(base_size = 12) + 
       theme(axis.text.x = element_text(angle = 45, 
@@ -279,7 +288,7 @@ write_csv(df5.all.areas,
 
 ggsave(here("results", 
             "dst", 
-            "2019-01-23_fcasts-with-CIs.pdf"), 
+            "2019-01-23_mh-readmit-rates_fcasts-with-CIs.pdf"), 
        p2.fcast.intervals)
 
 
