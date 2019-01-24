@@ -67,11 +67,12 @@ ts1.rhs <- df2.rhs %>%
 
 # ts1.rhs
 
-m1.rhs <- tslm(ts1.rhs ~ trend + season)
+m1.rhs <- auto.arima(ts1.rhs, seasonal = TRUE)
 
 summary(m1.rhs)
 resid(m1.rhs) %>% density() %>% plot  # looks a kinda weird but might be ok
 
+forecast(m1.rhs, 4) %>% autoplot()
 
 
 # bind old data and forecast together: -------
@@ -97,7 +98,7 @@ df2.1.rhs.fcast <- df2.rhs %>%
                         "low")) %>% 
       bind_cols(rhs.high)
 
-df2.1.rhs.fcast %>% View()
+df2.1.rhs.fcast # %>% View()
 
 
 
@@ -114,11 +115,13 @@ ts2.van <- df3.van %>%
 
 # ts1.rhs
 
-m2.van <- tslm(ts2.van ~ season)
+m2.van <- auto.arima(ts2.van, 
+                     seasonal = TRUE)
 
 summary(m2.van)
 resid(m2.van) %>% density() %>% plot  # looks a kinda weird but might be ok
 
+forecast(m2.van, 4) %>% autoplot()
 
 
 # bind old data and forecast together: -------
@@ -144,7 +147,7 @@ df3.1.van.fcast <- df3.van %>%
                   "low")) %>% 
       bind_cols(van.high)
 
-df3.1.van.fcast %>% View()
+df3.1.van.fcast  # %>% View()
 
 
 
@@ -165,11 +168,13 @@ ts3.phc <- df4.phc %>%
 
 # ts1.rhs
 
-m3.phc <- tslm(ts3.phc ~ season)
+m3.phc <- auto.arima(ts3.phc, 
+                     seasonal = TRUE)
 
 summary(m3.phc)
 resid(m3.phc) %>% density() %>% plot  # looks a kinda weird but might be ok
 
+forecast(m3.phc, 4) %>% autoplot()
 
 
 # bind old data and forecast together: -------
@@ -195,7 +200,7 @@ df4.1.phc.fcast <- df4.phc %>%
                   "low")) %>% 
       bind_cols(phc.high)
 
-df4.1.phc.fcast %>% View()
+df4.1.phc.fcast  # %>% View()
 
 
 
@@ -236,7 +241,25 @@ p2.fcast.intervals <-
       
       scale_x_discrete(breaks = df1.readmit.rates$period[seq(1, 25, 4)]) + 
       
-      theme_minimal() + 
+      labs(title = "Time series analysis of readmission rates, by CoC", 
+           subtitle = "Grey areas indicate forecast intervals for last 3 quarters, based on all previous data. \nPoints outside the forecast intervals indicate values that cannot be explained by chance variation alone. \n\nRichmond : FY19 Q1 is outside the forecast interval \nVancouver: FY18 Q2 is outside the forecast interval \n", 
+           caption = "Data source: VCH Balanced Scorecard") + 
+      
+      # highlight RHS point: 
+      geom_point(data = df5.all.areas %>% filter(entity == "Richmond"), 
+               aes(x = "FY2019-Q1", 
+                   y = 0.04), 
+               col = "red", 
+               size = 2) +
+      
+      # highlight: Vancouver point: 
+      geom_point(data = df5.all.areas %>% filter(entity == "Vancouver"), 
+                 aes(x = "FY2018-Q2", 
+                     y = 0.04), 
+                 col = "red", 
+                 size = 2) +
+      
+      theme_minimal(base_size = 12) + 
       theme(axis.text.x = element_text(angle = 45, 
                                        hjust = 1), 
             panel.border = element_rect(colour = "grey80", 
