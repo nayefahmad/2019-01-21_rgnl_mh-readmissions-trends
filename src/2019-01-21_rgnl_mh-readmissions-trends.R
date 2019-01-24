@@ -73,27 +73,41 @@ resid(m1.rhs) %>% density() %>% plot  # looks a kinda weird but might be ok
 
 
 
-# bind old data and forecast together: 
-df2.rhs %<>% 
-      bind_cols(augment(m1.rhs)) %>% 
-      select(entity, 
-             period, 
-             readmission_rate) %>% 
-      
-      # add column with indicator for forecast
-      mutate(forecast = rep(0, n())) %>% 
-      
-      # add in rows for forecasted data points in FY 2018 Q2 TO Q4: 
-      bind_rows(data.frame(entity = rep("Richmond", 3), 
-                           period = c("FY2018-Q2", 
-                                      "FY2018-Q3", 
-                                      "FY2018-Q4"), 
-                           readmission_rate = rep(NA, 3), 
-                           .fitted = forecast(m1.rhs, h = 3)$mean %>% as.numeric, 
-                           forecast = rep(1, 3)))
+# bind old data and forecast together: -------
+# df with lower forecast interval: 
+rhs.low <- forecast(m1.rhs, 
+                      h = 4) %>% 
+      as.data.frame() %>% 
+      pull('Lo 95')
+rhs.low <- data.frame(low = c(rep(NA, 21), 
+                              rhs.low))
 
-df2.rhs
+# df with higher forecast interval: 
+rhs.high <- forecast(m1.rhs, 
+                    h = 4) %>% 
+      as.data.frame() %>% 
+      pull('Hi 95')
+rhs.high <- data.frame(high = c(rep(NA, 21), 
+             rhs.high))
 
+df2.1.rhs.fcast <- df2.rhs %>%
+      bind_cols(rhs.low) %>% 
+      set_names(c(names(df2.rhs), 
+                        "low")) %>% 
+      bind_cols(rhs.high)
+
+df2.1.rhs.fcast %>% View()
+
+
+
+
+
+
+# write outputs:----------------------
+write_csv(df2.1.rhs.fcast,
+          here("results", 
+               "dst", 
+               "2019-01-23_rhs.csv"))
 
 
 
