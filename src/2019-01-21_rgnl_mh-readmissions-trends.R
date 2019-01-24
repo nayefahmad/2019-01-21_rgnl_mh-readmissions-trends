@@ -224,11 +224,12 @@ p2.fcast.intervals <-
       geom_ribbon(aes(x = period, 
                       ymin = low, 
                       ymax = high), 
-                  fill = "grey70") + 
+                  fill = "grey90") + 
       
       geom_line(aes(col = entity), 
                 size = 1) + 
-                      
+      
+      geom_point(aes(col = entity)) + 
       
       facet_wrap(~entity, 
                  nrow = 3) + 
@@ -248,10 +249,14 @@ p2.fcast.intervals <-
 
 
 # write outputs:----------------------
-write_csv(df2.1.rhs.fcast,
+write_csv(df5.all.areas,
           here("results", 
                "dst", 
-               "2019-01-23_rhs.csv"))
+               "2019-01-23_rhs-van-phc.csv"))
 
+ggsave(here("results", 
+            "dst", 
+            "2019-01-23_fcasts-with-CIs.pdf"), 
+       p2.fcast.intervals)
 
 
