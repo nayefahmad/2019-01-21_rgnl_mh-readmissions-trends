@@ -281,14 +281,14 @@ p2.fcast.intervals <-
 
 
 # write outputs:----------------------
-write_csv(df5.all.areas,
-          here("results", 
-               "dst", 
-               "2019-01-23_rhs-van-phc.csv"))
-
-ggsave(here("results", 
-            "dst", 
-            "2019-01-23_mh-readmit-rates_fcasts-with-CIs.pdf"), 
-       p2.fcast.intervals)
+# write_csv(df5.all.areas,
+#           here("results", 
+#                "dst", 
+#                "2019-01-23_rhs-van-phc.csv"))
+# 
+# ggsave(here("results", 
+#             "dst", 
+#             "2019-01-23_mh-readmit-rates_fcasts-with-CIs.pdf"), 
+#        p2.fcast.intervals)
 
 
